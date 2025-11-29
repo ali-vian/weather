@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Random Forest Predictor - Pertanian</title>
+    <style>
+      /* --- Tata Letak Utama (Flexbox) --- */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background-color: #f4f4f4;
+        transition: margin-left 0.5s; /* Animasi pergeseran konten utama */
+      }
+
+      /* --- Sidebar (Kiri) --- */
+      .sidebar {
+        height: 100%; /* Full height */
+        width: 350px;
+        position: fixed; /* Sidebar tetap di tempatnya */
+        z-index: 1; /* Di atas konten lain */
+        top: 0;
+        left: 0;
+        background-color: #ffffff;
+        padding: 20px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        transition: 0.5s; /* Animasi buka/tutup */
+        overflow-x: hidden;
+      }
+
+      /* Menyembunyikan sidebar secara default */
+      .sidebar.closed {
+        width: 0;
+        padding: 0;
+      }
+
+      /* --- Konten Utama (Kanan) --- */
+      .main-content {
+        flex-grow: 1;
+        margin-left: 350px; /* Jarak default = lebar sidebar */
+        padding: 20px;
+        background-color: #e9ffdf;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #38761d;
+        font-size: 1.5em;
+        text-align: center;
+        transition: margin-left 0.5s;
+      }
+
+      /* Pergeseran konten utama saat sidebar ditutup */
+      body.sidebar-closed .main-content {
+        margin-left: 0;
+      }
+
+      /* --- Tombol Buka/Tutup --- */
+      .openbtn {
+        font-size: 20px;
+        cursor: pointer;
+        background-color: #38761d;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        position: fixed; /* Tombol tetap di tempatnya */
+        top: 15px;
+        left: 15px;
+        z-index: 2; /* Di atas sidebar */
+        border-radius: 0 4px 4px 0;
+        transition: left 0.5s;
+      }
+
+      /* Geser tombol ke kanan saat sidebar terbuka */
+      .sidebar:not(.closed) ~ .openbtn {
+        left: 365px; /* Lebar sidebar + sedikit padding */
+      }
+
+      /* --- Styling Elemen Form dan Hasil (Dipertahankan) --- */
+      h1 {
+        color: #38761d;
+        border-bottom: 2px solid #e0e0e0;
+        padding-bottom: 10px;
+        margin-top: 0;
+        font-size: 1.5em;
+      }
+      h2.prediction {
+        color: #1c4587;
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #e8f0ff;
+        border-radius: 5px;
+        font-size: 1.2em;
+      }
+      .error {
+        color: red;
+        font-weight: bold;
+        padding: 10px;
+        background-color: #ffe8e8;
+        border: 1px solid red;
+        border-radius: 5px;
+      }
+      form div {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-size: 0.9em;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      input[type="submit"] {
+        background-color: #38761d;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 10px;
+        border-radius: 4px;
+      }
+      hr {
+        border: 0;
+        height: 1px;
+        background: #e0e0e0;
+        margin: 20px 0;
+      }
+
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #1a73e8;
+        padding: 10px 20px;
+        color: white;
+        font-size: 15px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      .navbar .brand {
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .navbar .menu {
+        list-style: none;
+        display: flex;
+        gap: 20px;
+        margin: 0;
+        padding: 0;
+      }
+
+      .navbar .menu li a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .navbar .menu li a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav class="navbar">
+        <div class="brand">Peta Madura</div>
+        <ul class="menu">
+          <li><a href="/">Beranda</a></li>
+          <li><a href="/crop">Rekomendasi Tanaman</a></li>
+          <li><a href="#">Tentang</a></li>
+        </ul>
+      </nav>
+    </header>
+    <button class="openbtn" id="toggleButton">☰ Buka Input</button>
+
+    <div class="sidebar" id="mySidebar">
+      <h1>🌱 Prediksi Jenis Tanaman</h1>
+
+      {% if error_message %}
+      <p class="error">❌ {{ error_message }}</p>
+      {% endif %}
+
+      <form action="{{ url_for('predict') }}" method="post">
+        {% for name in feature_names %}
+        <div>
+          <label for="{{ name }}"
+            >{{ name.upper() if name | length < 3 else name.capitalize()
+            }}:</label
+          >
+          <input
+            type="text"
+            id="{{ name }}"
+            name="{{ name }}"
+            required
+            value="{{ form_values.get(name, '') }}"
+          />
+        </div>
+        {% endfor %}
+
+        <input type="submit" value="Dapatkan Prediksi" />
+      </form>
+
+      <hr />
+
+      {% if prediction_text %}
+      <h2 class="prediction">✅ {{ prediction_text }}</h2>
+      <p style="font-size: 0.8em; color: #555">
+        *Silakan ganti kode angka hasil prediksi dengan nama kelas tanaman yang
+        sesuai.
+      </p>
+      {% endif %}
+    </div>
+    <script>
+      document.getElementById("toggleButton").onclick = function () {
+        var sidebar = document.getElementById("mySidebar");
+        var body = document.body;
+        var button = document.getElementById("toggleButton");
+
+        // Toggle class 'closed' pada sidebar
+        sidebar.classList.toggle("closed");
+
+        // Toggle class 'sidebar-closed' pada body untuk menggeser main-content
+        body.classList.toggle("sidebar-closed");
+
+        // Mengubah teks tombol
+        if (sidebar.classList.contains("closed")) {
+          button.innerHTML = "☰ Buka Input";
+        } else {
+          button.innerHTML = "✖ Tutup Input";
+        }
+      };
+
+      // Secara default, sidebar tetap terbuka saat dimuat (untuk kepraktisan)
+    </script>
+  </body>
+</html>
