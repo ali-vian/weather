@@ -2,6 +2,7 @@ import joblib
 import numpy as np
 from flask import Flask, request, jsonify, render_template
 import pandas as pd
+from datetime import timedelta
 
 # 🛠️ Muat Model dan Scaler
 try:
@@ -95,6 +96,97 @@ def predict():
                                error_message=f'Terjadi error tak terduga: {str(e)}',
                                feature_names=FEATURE_NAMES,
                                form_values=request.form.to_dict()), 500
+
+# ============================
+# ROUTE FORECASTING PER KABUPATEN
+# ============================
+
+@app.route('/forecast/<kabupaten>')
+def forecast(kabupaten):
+    try:
+        csv_map = {
+            "Bangkalan": r"C:\Tugas\Big Data\weather\bangkalan.csv",
+            "Sampang": r"C:\Tugas\Big Data\weather\sampang.csv",
+            "Pamekasan": r"C:\Tugas\Big Data\weather\pamekasan.csv",
+            "Sumenep": r"C:\Tugas\Big Data\weather\sumenep.csv"
+        }
+
+        model_path = r"C:\Tugas\Big Data\weather\var_model_multivariate.joblib"
+
+        if kabupaten not in csv_map:
+            return jsonify({"error": "Kabupaten tidak ditemukan"}), 404
+
+        # =====================
+        # BACA CSV
+        # =====================
+        df = pd.read_csv(csv_map[kabupaten])
+
+        # =====================
+        # SET INDEX WAKTU
+        # =====================
+        df['datetime'] = pd.to_datetime(df['datetime'])
+        df.set_index('datetime', inplace=True)
+
+        # =====================
+        # LOAD MODEL VAR
+        # =====================
+        var_model = joblib.load(model_path)
+
+        # =====================
+        # FEATURE ENGINEERING (SESUAI CSV ANDA)
+        # =====================
+        df['daily_temp'] = df['temp']                          # dari temp
+        df['daily_humidity_diff'] = df['humidity'].diff()     # dari humidity
+        df['daily_precipprob_diff'] = df['precipprob'].diff() # dari precipprob
+        df = df.dropna()
+
+        # =====================
+        # FILTER FITUR SESUAI MODEL VAR
+        # =====================
+        model_features = [
+            'daily_temp',
+            'daily_humidity_diff',
+            'daily_precipprob_diff'
+        ]
+
+        df = df[model_features]
+
+        # =====================
+        # AMBIL 3 HARI TERAKHIR
+        # =====================
+        last_3_days = df.tail(3)
+
+        # =====================
+        # FORECAST 5 HARI
+        # =====================
+        forecast_values = var_model.forecast(df.values, steps=5)
+
+        forecast_dates = [
+            df.index[-1] + pd.Timedelta(days=i)
+            for i in range(1, 6)
+        ]
+
+        forecast_df = pd.DataFrame(
+            forecast_values,
+            columns=df.columns,
+            index=forecast_dates
+        )
+
+        return jsonify({
+            "last_days": {
+                "dates": last_3_days.index.strftime('%Y-%m-%d').tolist(),
+                "values": last_3_days.values.tolist()
+            },
+            "forecast": {
+                "dates": forecast_df.index.strftime('%Y-%m-%d').tolist(),
+                "values": forecast_df.values.tolist()
+            },
+            "columns": df.columns.tolist()
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

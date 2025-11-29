@@ -96,6 +96,7 @@
         height: calc(100% - 50px);
       }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <header>
@@ -109,9 +110,107 @@
       </nav>
     </header>
 
-    <div id="map"></div>
+    <div id="map">
+      <div id="chartBox" style="
+        position: absolute;
+        top: 80px;
+        right: 20px;
+        width: 450px;
+        background: white;
+        border-radius: 10px;
+        padding: 15px 15px 10px 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        display: none;
+        z-index: 9999;">
+
+        <!-- HEADER + TOMBOL CLOSE -->
+        <div style="
+          display:flex;
+          justify-content: space-between;
+          align-items:center;
+          margin-bottom: 10px;">
+          <h4 id="chartTitle" style="margin:0;"></h4>
+
+          <button onclick="tutupChart()" style="
+            border: none;
+            background: transparent;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;">✖</button>
+        </div>
+
+        <canvas id="forecastChart"></canvas>
+    </div>
+
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+      function tutupChart() {
+        document.getElementById("chartBox").style.display = "none";
+
+        if (chartInstance) {
+          chartInstance.destroy();
+          chartInstance = null;
+        }
+      }
+
+      let chartInstance = null;
+
+      function tampilkanGrafik(kabupaten, data) {
+        document.getElementById("chartBox").style.display = "block";
+        document.getElementById("chartTitle").innerText =
+          `Forecasting Cuaca ${kabupaten}`;
+
+        const labels = [
+          ...data.last_days.dates,
+          ...data.forecast.dates
+        ];
+
+        const lastData = data.last_days.values.map(v => v[0]);
+        const forecastData = data.forecast.values.map(v => v[0]);
+
+        const totalData = [...lastData, ...forecastData];
+
+        const ctx = document.getElementById("forecastChart").getContext("2d");
+
+        if (chartInstance) {
+          chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Data 3 Hari Terakhir",
+                data: lastData,
+                borderWidth: 2,
+                tension: 0.4,
+                fill: false
+              },
+              {
+                label: "Forecast 5 Hari Kedepan",
+                data: Array(lastData.length).fill(null).concat(forecastData),
+                borderWidth: 2,
+                borderDash: [5, 5],
+                tension: 0.4,
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: { beginAtZero: false }
+            }
+          }
+        });
+      }
+    </script>
+
 
     <script>
       // Warna per kabupaten berdasarkan nm_dati2
@@ -143,7 +242,15 @@
               };
             },
             onEachFeature: function (feature, layer) {
-              layer.bindPopup(feature.properties.nm_dati2 + " Kabupaten");
+              const nama = feature.properties.nm_dati2;
+
+              layer.bindPopup(nama + " Kabupaten");
+
+              layer.on("click", function () {
+                fetch(`/forecast/${nama}`)
+                  .then(res => res.json())
+                  .then(data => tampilkanGrafik(nama, data));
+              });
             },
           }).addTo(map);
         });
