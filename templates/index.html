@@ -13,6 +13,7 @@
         }
 
         /* ================= LEGEND ================= */
+        /* Mengubah posisi z-index untuk mencegah tumpang tindih */
         .legend {
             position: absolute;
             bottom: 30px;
@@ -32,13 +33,21 @@
         }
         .legend .item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 6px;
+            margin-bottom: 5px;
         }
         .legend .swatch {
             width: 18px;
             height: 12px;
             border: 1px solid #444;
+            flex-shrink: 0;
+            margin-top: 3px;
+        }
+        .legend .text-content {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
         }
 
         /* ================= NAVBAR ================= */
@@ -50,6 +59,8 @@
             padding: 10px 20px;
             color: white;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 10000;
         }
         .navbar .brand {
             font-size: 18px;
@@ -146,6 +157,7 @@
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
 <body>
@@ -161,43 +173,90 @@
 </header>
 
 <div id="map">
-    <div class="clustering-controls">
-        <h3>Simulasi Clustering (K-Means)</h3>
+    
+    <button onclick="toggleControls(true)" style="position: absolute; top: 80px; left: 20px; z-index: 10001; padding: 5px 10px; background: #1a73e8; color: white; border: none; border-radius: 5px; cursor: pointer;" id="showControlsBtn">▶ Buka Kontrol</button>
 
-        <label>Pilih Kabupaten:</label>
-        <select id="kabupatenSelect">
-            <option value="Bangkalan">Bangkalan</option>
-            <option value="Sampang">Sampang</option>
-            <option value="Pamekasan">Pamekasan</option>
-            <option value="Sumenep">Sumenep</option>
-        </select>
-
-        <div class="date-inputs" style="display:flex; gap:10px;">
-            <input type="number" id="tglInput" value="1" min="1" max="31">
-            <input type="number" id="blnInput" value="1" min="1" max="12">
-            <input type="number" id="tahunInput" value="2024" min="2020" max="2030">
+    <div class="clustering-controls" id="clusteringControlsPanel" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>Simulasi Clustering (K-Means)</h3>
+            <button onclick="toggleControls(false)" style="border:none; background:none; font-size:20px; cursor:pointer; color:#1a73e8;">✖</button>
         </div>
 
-        <button onclick="runClustering()">Jalankan Clustering</button>
+        <div id="controlsContent">
+            <div class="date-inputs" style="display:flex; gap:10px;">
+                <input type="number" id="tglInput" value="1" min="1" max="31" placeholder="Tanggal">
+                <input type="number" id="blnInput" value="1" min="1" max="12" placeholder="Bulan">
+                <input type="number" id="tahunInput" value="2024" min="2020" max="2030" placeholder="Tahun">
+            </div>
 
-        <div id="notificationBox"></div>
-        <table id="interpretasiKlaster"></table>
-    </div>
+            <button onclick="runClustering()">Jalankan Clustering 4 Kabupaten</button>
+
+            <div id="notificationBox"></div>
+            <table id="interpretasiKlaster"></table>
+        </div>
+        </div>
+
 
     <div id="chartBox">
         <div style="display:flex; justify-content:space-between;">
             <h4 id="chartTitle"></h4>
-            <button onclick="tutupChart()" style="border:none; background:none; font-size:20px;">✖</button>
+            <button onclick="tutupChart()" style="border:none; background:none; font-size:20px; cursor:pointer;">✖</button>
         </div>
         <canvas id="forecastChart"></canvas>
     </div>
 
-    <div class="legend"></div>
+    <button onclick="toggleLegend(true)" style="position: absolute; bottom: 30px; left: 20px; z-index: 10001; padding: 5px 10px; background: #1a73e8; color: white; border: none; border-radius: 5px; cursor: pointer;" id="showLegendBtn">▶ Buka Klaster</button>
+
+    <div class="legend" id="clusterLegendPanel" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h4 id="legendTitle">Kabupaten</h4>
+            <button onclick="toggleLegend(false)" style="border:none; background:none; font-size:20px; cursor:pointer; color:#333;">✖</button>
+        </div>
+        
+        <div id="legendContent">
+            </div>
+        </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script>
+/* ====================== TOGGLE FUNCTIONS (SIDEBAR STYLE) ====================== */
+
+/**
+ * Mengubah tampilan panel Clustering Controls (Sidebar)
+ * @param {boolean} show - true untuk menampilkan panel, false untuk menyembunyikan.
+ */
+function toggleControls(show) {
+    const panel = document.getElementById('clusteringControlsPanel');
+    const showBtn = document.getElementById('showControlsBtn');
+
+    if (show) {
+        panel.style.display = 'block';
+        showBtn.style.display = 'none';
+    } else {
+        panel.style.display = 'none';
+        showBtn.style.display = 'block';
+    }
+}
+
+/**
+ * Mengubah tampilan panel Legend (Sidebar Bawah)
+ * @param {boolean} show - true untuk menampilkan panel, false untuk menyembunyikan.
+ */
+function toggleLegend(show) {
+    const panel = document.getElementById('clusterLegendPanel');
+    const showBtn = document.getElementById('showLegendBtn');
+
+    if (show) {
+        panel.style.display = 'block';
+        showBtn.style.display = 'none';
+    } else {
+        panel.style.display = 'none';
+        // Hanya tampilkan tombol buka legend jika map sudah dimuat
+        if (geoJsonLayer) showBtn.style.display = 'block';
+    }
+}
+
+
 /* ====================== CHART ====================== */
 let chartInstance = null;
 
@@ -227,13 +286,27 @@ function tampilkanGrafik(kabupaten, data) {
                 {
                     label: "3 Hari Terakhir",
                     data: lastData,
+                    borderColor: '#42a5f5',
+                    backgroundColor: 'rgba(66, 165, 245, 0.5)',
                 },
                 {
                     label: "Forecast 5 Hari",
                     data: Array(lastData.length).fill(null).concat(forecastData),
-                    borderDash: [6,4]
+                    borderColor: '#ef5350',
+                    borderDash: [6,4],
+                    backgroundColor: 'transparent'
                 }
             ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Suhu Rata-rata (°C)' }
+            },
+            scales: {
+                y: { beginAtZero: false }
+            }
         }
     });
 }
@@ -244,50 +317,55 @@ const defaultWarnaKab = {
     Bangkalan:"#e41a1c", Sampang:"#377eb8",
     Pamekasan:"#4daf4a", Sumenep:"#984ea3"
 };
+const kabupatenList = ["Bangkalan", "Sampang", "Pamekasan", "Sumenep"]; 
 
 var map = L.map("map").setView([-7.0, 113.9], 10);
 var geoJsonLayer = null;
+var clusterResults = {}; 
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-var activeClusterStyle = null;
-var activeKabupaten = null;
-
 function styleFeature(feature) {
     const nama = feature.properties.nm_dati2;
+    const clusterId = clusterResults[nama];
 
-    if (activeKabupaten === nama && activeClusterStyle) {
+    if (clusterId !== undefined && clusterId !== null) {
         return {
             color:"#333",
-            fillColor:activeClusterStyle.color,
-            fillOpacity:0.8
+            fillColor: clusterColors[clusterId] || "#ccc",
+            fillOpacity:0.8,
+            weight: 2
         };
     }
 
     return {
         color:"#444",
         fillColor: defaultWarnaKab[nama] || "#ccc",
-        fillOpacity:0.6
+        fillOpacity:0.6,
+        weight: 1
     };
 }
 
 function updateLegend(mode) {
-    const legend = document.querySelector(".legend");
-    legend.innerHTML = "";
+    const legendContent = document.getElementById("legendContent");
+    const legendTitle = document.getElementById("legendTitle");
+    legendContent.innerHTML = "";
+    
+    // Pastikan legend terbuka setelah clustering berhasil
+    toggleLegend(true);
 
     if (mode === "kabupaten") {
-        legend.innerHTML += "<h4>Kabupaten</h4>";
+        legendTitle.innerHTML = "Kabupaten";
         Object.keys(defaultWarnaKab).forEach(kab => {
-            legend.innerHTML += `
+            legendContent.innerHTML += `
                 <div class="item">
                     <span class="swatch" style="background:${defaultWarnaKab[kab]}"></span>
-                    ${kab}
+                    <div class="text-content">${kab}</div>
                 </div>`;
         });
     } else {
-        legend.innerHTML += "<h4>Klaster Cuaca</h4>";
+        legendTitle.innerHTML = "Klaster Cuaca";
 
-        // Tambahkan deskripsi klaster di sini
         const clusterDescriptions = {
             0: {
                 stats: "Rata-rata Suhu 33.2°C, Curah Hujan 100.0 mm, Kelembaban 78.7%",
@@ -303,12 +381,13 @@ function updateLegend(mode) {
             }
         };
         Object.keys(clusterColors).forEach(i => {
-            legend.innerHTML += `
+            legendContent.innerHTML += `
                 <div class="item">
                     <span class="swatch" style="background:${clusterColors[i]}"></span>
-                    <b>Klaster ${i}</b><br>
-                    <small>${clusterDescriptions[i].stats}</small><br>
-                    <i>→ ${clusterDescriptions[i].type}</i>
+                    <div class="text-content">
+                        <b>Klaster ${i}</b> (${clusterDescriptions[i].type})<br>
+                        <small>${clusterDescriptions[i].stats}</small>
+                    </div>
                 </div>
             `;
         });
@@ -318,9 +397,12 @@ function updateLegend(mode) {
 function loadKabupatenLayer() {
     if (geoJsonLayer) map.removeLayer(geoJsonLayer);
 
-    activeClusterStyle = null;
-    activeKabupaten = null;
+    clusterResults = {};
     updateLegend("kabupaten");
+    
+    // Sembunyikan Kontrol dan Legend saat memuat peta
+    toggleControls(false); 
+    toggleLegend(false);
 
     fetch("{{ url_for('static', filename='Madura.geojson') }}")
         .then(res => res.json())
@@ -330,86 +412,125 @@ function loadKabupatenLayer() {
                 onEachFeature: (feature, layer) => {
                     const nama = feature.properties.nm_dati2;
 
+                    layer.bindPopup(`<b>${nama}</b>`);
+
                     layer.on("click", () => {
                         fetch(`/forecast/${nama}`)
                             .then(res => res.json())
-                            .then(data => tampilkanGrafik(nama, data));
+                            .then(data => tampilkanGrafik(nama, data))
+                            .catch(err => alert(`Gagal mengambil data forecast untuk ${nama}: ${err.message}`));
                     });
                 }
             }).addTo(map);
+
+            map.fitBounds(geoJsonLayer.getBounds());
+            toggleControls(true); // Tampilkan Kontrol Clustering secara default setelah loading
+            toggleLegend(false); // Sembunyikan Legend Klaster setelah loading (akan muncul saat clustering)
+        })
+        .catch(err => {
+            console.error("Gagal memuat GeoJSON:", err);
+            toggleControls(true); // Pastikan kontrol tetap bisa dibuka jika ada error
         });
 }
 
+function displayClusterInterpretation(clusterCenters, nFeatures) {
+    const table = document.getElementById("interpretasiKlaster");
+    table.innerHTML = "";
+    table.style.display = 'table';
+
+    const featureNames = ["Suhu (°C)", "Curah Hujan (mm)", "Kelembaban (%)"].slice(0, nFeatures);
+    let headerHtml = '<tr><th>Klaster</th>';
+    featureNames.forEach(name => {
+        headerHtml += `<th>${name}</th>`;
+    });
+    headerHtml += '</tr>';
+    table.innerHTML += headerHtml;
+
+    clusterCenters.forEach((center, index) => {
+        let rowHtml = `<tr><td><b style="color:${clusterColors[index] || '#333'};">Klaster ${index}</b></td>`;
+        center.forEach((value, i) => {
+            let formattedValue;
+            if (i === 0) formattedValue = `${value.toFixed(1)}°C`;
+            else if (i === 1) formattedValue = `${value.toFixed(1)} mm`;
+            else formattedValue = `${value.toFixed(1)}%`;
+
+            rowHtml += `<td>${formattedValue}</td>`;
+        });
+        rowHtml += '</tr>';
+        table.innerHTML += rowHtml;
+    });
+}
+
 /* ====================== CLUSTERING ====================== */
-function runClustering() {
-    const kab = document.getElementById("kabupatenSelect").value;
+async function runClustering() {
     const tgl = document.getElementById("tglInput").value || "1";
     const bln = document.getElementById("blnInput").value || "1";
     const tahun = document.getElementById("tahunInput").value || "2024";
     const notificationBox = document.getElementById("notificationBox");
 
-    notificationBox.innerHTML = `<span style="color:blue;">⏳ Mengambil prediksi klaster untuk ${kab}...</span>`;
+    notificationBox.innerHTML = `<span style="color:blue;">⏳ Memulai prediksi klaster untuk 4 kabupaten...</span>`;
 
-    // NOTE: gunakan endpoint '/clustering' (sesuai app.py Anda)
-    const url = `/clustering/${encodeURIComponent(kab)}?tgl=${encodeURIComponent(tgl)}&bln=${encodeURIComponent(bln)}&tahun=${encodeURIComponent(tahun)}`;
+    clusterResults = {};
+    let allSuccess = true;
+    let clusterCentersData = null;
 
-    fetch(url)
-      .then(async (res) => {
-        const text = await res.text();
-        // coba parse json, kalau gagal tampilkan text mentah
+    for (const kab of kabupatenList) {
+        const url = `/clustering/${encodeURIComponent(kab)}?tgl=${encodeURIComponent(tgl)}&bln=${encodeURIComponent(bln)}&tahun=${encodeURIComponent(tahun)}`;
+        
         try {
-            const data = JSON.parse(text);
-            if (!res.ok) {
-                // jika backend mengembalikan error JSON
-                const msg = data.message || data.error || text;
-                notificationBox.innerHTML = `<span style="color:red;">❌ Gagal: ${msg}</span>`;
-                console.error("Clustering failed response:", data);
-                return;
+            const res = await fetch(url);
+            const text = await res.text();
+            
+            try {
+                const data = JSON.parse(text);
+                if (!res.ok) {
+                    const msg = data.message || data.error || text;
+                    console.error(`Clustering ${kab} gagal:`, msg);
+                    notificationBox.innerHTML += `<br><span style="color:red;">❌ Gagal ${kab}: ${msg}</span>`;
+                    allSuccess = false;
+                    continue;
+                }
+
+                const predictedCluster = (data.predicted_cluster ?? data.predicted ?? data.cluster ?? data.predictedCluster);
+                if (predictedCluster === undefined || predictedCluster === null) {
+                    console.error(`Respon ${kab} tidak valid: tidak ada field klaster.`, data);
+                    notificationBox.innerHTML += `<br><span style="color:red;">❌ Respon ${kab} tidak valid (tanpa klaster).</span>`;
+                    allSuccess = false;
+                    continue;
+                }
+
+                const clusterId = Number(predictedCluster);
+                clusterResults[kab] = clusterId;
+
+                if (Array.isArray(data.cluster_centers) && !clusterCentersData) {
+                    clusterCentersData = data.cluster_centers;
+                }
+
+            } catch (err) {
+                console.error(`Gagal parsing respon JSON dari ${kab}:`, text, err);
+                notificationBox.innerHTML += `<br><span style="color:red;">❌ Gagal parsing respon ${kab}.</span>`;
+                allSuccess = false;
             }
-
-            // Ambil klaster dari beberapa kemungkinan key
-            const predictedCluster = (data.predicted_cluster ?? data.predicted ?? data.cluster ?? data.predictedCluster);
-            if (predictedCluster === undefined || predictedCluster === null) {
-                notificationBox.innerHTML = `<span style="color:red;">❌ Respon tidak valid (tidak ada field klaster). Lihat console.</span>`;
-                console.error("Invalid clustering response:", data);
-                return;
-            }
-
-            const clusterId = Number(predictedCluster);
-
-            // set global state agar styleFeature bisa mewarnai
-            activeKabupaten = kab;
-            activeClusterStyle = { color: clusterColors[clusterId] || '#333' };
-
-            // reload geojson layer agar styleFeature dipanggil ulang
-            if (geoJsonLayer) {
-                geoJsonLayer.setStyle(styleFeature);
-            } else {
-                loadKabupatenLayer();
-            }
-
-            // update legend & tampilkan interpretasi jika ada
-            updateLegend('cluster');
-            if (Array.isArray(data.cluster_centers)) {
-                displayClusterInterpretation(data.cluster_centers, data.n_features || data.n_features || 3);
-            }
-
-            notificationBox.innerHTML = `<span style="color:green;">✅ Clustering ${kab} berhasil. Klaster: ${clusterId}</span>`;
-            console.log("Clustering response:", data);
 
         } catch (err) {
-            // bukan json -> tampil pesan mentah
-            notificationBox.innerHTML = `<span style="color:red;">❌ Gagal parsing response: lihat console.</span>`;
-            console.error("Failed parsing clustering response text:", text, err);
+            notificationBox.innerHTML += `<br><span style="color:red;">❌ Gagal fetch API ${kab}: ${err.message}. Pastikan server Flask berjalan.</span>`;
+            console.error(`Clustering fetch error ${kab}:`, err);
+            allSuccess = false;
         }
-      })
-      .catch((err) => {
-        notificationBox.innerHTML = `<span style="color:red;">❌ Gagal: ${err.message}. Pastikan server Flask berjalan dan endpoint benar.</span>`;
-        console.error("Clustering fetch error:", err);
-      });
+    }
+
+    if (geoJsonLayer) {
+        geoJsonLayer.setStyle(styleFeature);
+    } else {
+        loadKabupatenLayer();
+    }
+    
+    // Panggil updateLegend untuk menampilkan hasil klaster (ini juga memanggil toggleLegend(true))
+    updateLegend('cluster');
 }
 
 
+// Muat peta saat halaman pertama dimuat
 loadKabupatenLayer();
 </script>
 
