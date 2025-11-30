@@ -36,10 +36,10 @@ VAR_MODEL_PATH = "var_model_multivariate.joblib"
 # --- D. Mapping Data CSV ---
 # Ganti dengan path CSV yang AKTUAL di server Anda
 CSV_MAP = {
-    "Bangkalan": "bangkalan.csv", 
-    "Sampang": "sampang.csv",
-    "Pamekasan": "pamekasan.csv",
-    "Sumenep": "sumenep.csv",
+    "Bangkalan": "static/bangkalan.csv", 
+    "Sampang": "static/sampang.csv",
+    "Pamekasan": "static/pamekasan.csv",
+    "Sumenep": "static/sumenep.csv",
 }
 
 # --- E. Variabel Global untuk Model yang Dimuat (Termasuk Model Teman Anda) ---
@@ -177,13 +177,13 @@ def predict():
 def forecast(kabupaten):
     try:
         csv_map = {
-            "Bangkalan": r"D:\weather-main\bangkalan.csv",
-            "Sampang": r"D:\weather-main\pamekasan.csv",
-            "Pamekasan": r"D:\weather-main\sampang.csv",
-            "Sumenep": r"D:\weather-main\sumenep.csv"
+            "Bangkalan": r"static\bangkalan.csv",
+            "Sampang": r"static\sampang.csv",
+            "Pamekasan": r"static\pamekasan.csv",
+            "Sumenep": r"static\sumenep.csv"
         }
 
-        model_path = r"D:\weather-main\var_model_multivariate.joblib"
+        model_path = r"static\var_model_multivariate.joblib"
 
         if kabupaten not in csv_map:
             return jsonify({"error": "Kabupaten tidak ditemukan"}), 404

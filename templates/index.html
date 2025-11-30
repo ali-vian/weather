@@ -1,386 +1,501 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Peta Madura</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
 
     <style>
-        html, body, #map {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
+      html,
+      body,
+      #map {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
 
-        /* ================= LEGEND ================= */
-        /* Mengubah posisi z-index untuk mencegah tumpang tindih */
-        .legend {
-            position: absolute;
-            bottom: 30px;
-            left: 20px;
-            background: white;
-            padding: 10px;
-            line-height: 1.5;
-            border-radius: 6px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-            font-size: 13px;
-            z-index: 9999;
-        }
-        .legend h4 {
-            margin: 0 0 5px 0;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .legend .item {
-            display: flex;
-            align-items: flex-start;
-            gap: 6px;
-            margin-bottom: 5px;
-        }
-        .legend .swatch {
-            width: 18px;
-            height: 12px;
-            border: 1px solid #444;
-            flex-shrink: 0;
-            margin-top: 3px;
-        }
-        .legend .text-content {
-            display: flex;
-            flex-direction: column;
-            text-align: left;
-        }
+      /* ================= LEGEND ================= */
+      /* Mengubah posisi z-index untuk mencegah tumpang tindih */
+      .legend {
+        position: absolute;
+        bottom: 30px;
+        left: 20px;
+        background: white;
+        padding: 10px;
+        line-height: 1.5;
+        border-radius: 6px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        font-size: 13px;
+        z-index: 9999;
+      }
+      .legend h4 {
+        margin: 0 0 5px 0;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      .legend .item {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        margin-bottom: 5px;
+      }
+      .legend .swatch {
+        width: 18px;
+        height: 12px;
+        border: 1px solid #444;
+        flex-shrink: 0;
+        margin-top: 3px;
+      }
+      .legend .text-content {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+      }
 
-        /* ================= NAVBAR ================= */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #1a73e8;
-            padding: 10px 20px;
-            color: white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 10000;
-        }
-        .navbar .brand {
-            font-size: 18px;
-            font-weight: bold;
-        }
-        .navbar .menu {
-            list-style: none;
-            display: flex;
-            gap: 20px;
-            margin: 0;
-            padding: 0;
-        }
-        .navbar .menu li a {
-            color: white;
-            text-decoration: none;
-        }
+      /* ================= NAVBAR ================= */
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #1a73e8;
+        padding: 10px 20px;
+        color: white;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 10000;
+      }
+      .navbar .brand {
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .navbar .menu {
+        list-style: none;
+        display: flex;
+        gap: 20px;
+        margin: 0;
+        padding: 0;
+      }
+      .navbar .menu li a {
+        color: white;
+        text-decoration: none;
+      }
 
-        /* ================= CLUSTER CONTROL ================= */
-        .clustering-controls {
-            position: absolute;
-            top: 80px;
-            left: 20px;
-            width: 300px;
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 9999;
-        }
-        .clustering-controls h3 {
-            color: #1a73e8;
-            margin-top: 0;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 8px;
-        }
-        .clustering-controls select,
-        .clustering-controls input[type=number] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-        }
-        .clustering-controls button {
-            width: 100%;
-            padding: 10px;
-            background: #4caf50;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .clustering-controls button:hover {
-            background: #45a049;
-        }
+      /* ================= CLUSTER CONTROL ================= */
+      .clustering-controls {
+        position: absolute;
+        top: 80px;
+        left: 20px;
+        width: 300px;
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        z-index: 9999;
+      }
+      .clustering-controls h3 {
+        color: #1a73e8;
+        margin-top: 0;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 8px;
+      }
+      .clustering-controls select,
+      .clustering-controls input[type="number"] {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+      }
+      .clustering-controls button {
+        width: 100%;
+        padding: 10px;
+        background: #4caf50;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .clustering-controls button:hover {
+        background: #45a049;
+      }
 
-        #notificationBox {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
+      #notificationBox {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 4px;
+        font-size: 12px;
+      }
 
-        /* ================= TABEL INTERPRETASI ================= */
-        #interpretasiKlaster {
-            width: 100%;
-            margin-top: 15px;
-            border-collapse: collapse;
-            font-size: 11px;
-            display: none;
-        }
-        #interpretasiKlaster th, #interpretasiKlaster td {
-            border: 1px solid #ddd;
-            padding: 6px;
-            text-align: center;
-        }
-        #interpretasiKlaster th {
-            background: #f2f2f2;
-        }
+      /* ================= TABEL INTERPRETASI ================= */
+      #interpretasiKlaster {
+        width: 100%;
+        margin-top: 15px;
+        border-collapse: collapse;
+        font-size: 11px;
+        display: none;
+      }
+      #interpretasiKlaster th,
+      #interpretasiKlaster td {
+        border: 1px solid #ddd;
+        padding: 6px;
+        text-align: center;
+      }
+      #interpretasiKlaster th {
+        background: #f2f2f2;
+      }
 
-        /* ================= CHART BOX ================= */
-        #chartBox {
-            position: absolute;
-            top: 80px;
-            right: 20px;
-            width: 450px;
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 9999;
-            display: none;
-        }
+      /* ================= CHART BOX ================= */
+      #chartBox {
+        position: absolute;
+        top: 80px;
+        right: 20px;
+        width: 450px;
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        z-index: 9999;
+        display: none;
+      }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-</head>
+  </head>
 
-<body>
-<header>
-    <nav class="navbar">
+  <body>
+    <header>
+      <nav class="navbar">
         <div class="brand">Peta Madura</div>
         <ul class="menu">
-            <li><a href="/">Beranda</a></li>
-            <li><a href="/crop">Rekomendasi Tanaman</a></li>
-            <li><a href="#">Tentang</a></li>
+          <li><a href="/">Beranda</a></li>
+          <li><a href="/crop">Rekomendasi Tanaman</a></li>
+          <li><a href="#">Tentang</a></li>
         </ul>
-    </nav>
-</header>
+      </nav>
+    </header>
 
-<div id="map">
-    
-    <button onclick="toggleControls(true)" style="position: absolute; top: 80px; left: 20px; z-index: 10001; padding: 5px 10px; background: #1a73e8; color: white; border: none; border-radius: 5px; cursor: pointer;" id="showControlsBtn">▶ Buka Kontrol</button>
+    <div id="map">
+      <button
+        onclick="toggleControls(true)"
+        style="
+          position: absolute;
+          top: 80px;
+          left: 20px;
+          z-index: 10001;
+          padding: 5px 10px;
+          background: #1a73e8;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+        "
+        id="showControlsBtn"
+      >
+        ▶ Buka Kontrol
+      </button>
 
-    <div class="clustering-controls" id="clusteringControlsPanel" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3>Simulasi Clustering (K-Means)</h3>
-            <button onclick="toggleControls(false)" style="border:none; background:none; font-size:20px; cursor:pointer; color:#1a73e8;">✖</button>
+      <div
+        class="clustering-controls"
+        id="clusteringControlsPanel"
+        style="display: none"
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h3>Simulasi Clustering (K-Means)</h3>
+          <button
+            onclick="toggleControls(false)"
+            style="
+              border: none;
+              background: none;
+              font-size: 20px;
+              cursor: pointer;
+              color: #1a73e8;
+            "
+          >
+            ✖
+          </button>
         </div>
 
         <div id="controlsContent">
-            <div class="date-inputs" style="display:flex; gap:10px;">
-                <input type="number" id="tglInput" value="1" min="1" max="31" placeholder="Tanggal">
-                <input type="number" id="blnInput" value="1" min="1" max="12" placeholder="Bulan">
-                <input type="number" id="tahunInput" value="2024" min="2020" max="2030" placeholder="Tahun">
-            </div>
+          <div class="date-inputs" style="display: flex; gap: 10px">
+            <input
+              type="number"
+              id="tglInput"
+              value="1"
+              min="1"
+              max="31"
+              placeholder="Tanggal"
+            />
+            <input
+              type="number"
+              id="blnInput"
+              value="1"
+              min="1"
+              max="12"
+              placeholder="Bulan"
+            />
+            <input
+              type="number"
+              id="tahunInput"
+              value="2024"
+              min="2020"
+              max="2030"
+              placeholder="Tahun"
+            />
+          </div>
 
-            <button onclick="runClustering()">Jalankan Clustering 4 Kabupaten</button>
+          <button onclick="runClustering()">
+            Jalankan Clustering 4 Kabupaten
+          </button>
 
-            <div id="notificationBox"></div>
-            <table id="interpretasiKlaster"></table>
+          <div id="notificationBox"></div>
+          <table id="interpretasiKlaster"></table>
         </div>
-        </div>
+      </div>
 
-
-    <div id="chartBox">
-        <div style="display:flex; justify-content:space-between;">
-            <h4 id="chartTitle"></h4>
-            <button onclick="tutupChart()" style="border:none; background:none; font-size:20px; cursor:pointer;">✖</button>
+      <div id="chartBox">
+        <div style="display: flex; justify-content: space-between">
+          <h4 id="chartTitle"></h4>
+          <button
+            onclick="tutupChart()"
+            style="
+              border: none;
+              background: none;
+              font-size: 20px;
+              cursor: pointer;
+            "
+          >
+            ✖
+          </button>
         </div>
         <canvas id="forecastChart"></canvas>
+      </div>
+
+      <button
+        onclick="toggleLegend(true)"
+        style="
+          position: absolute;
+          bottom: 30px;
+          left: 20px;
+          z-index: 10001;
+          padding: 5px 10px;
+          background: #1a73e8;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+        "
+        id="showLegendBtn"
+      >
+        ▶ Buka Klaster
+      </button>
+
+      <div class="legend" id="clusterLegendPanel" style="display: none">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h4 id="legendTitle">Kabupaten</h4>
+          <button
+            onclick="toggleLegend(false)"
+            style="
+              border: none;
+              background: none;
+              font-size: 20px;
+              cursor: pointer;
+              color: #333;
+            "
+          >
+            ✖
+          </button>
+        </div>
+
+        <div id="legendContent"></div>
+      </div>
     </div>
 
-    <button onclick="toggleLegend(true)" style="position: absolute; bottom: 30px; left: 20px; z-index: 10001; padding: 5px 10px; background: #1a73e8; color: white; border: none; border-radius: 5px; cursor: pointer;" id="showLegendBtn">▶ Buka Klaster</button>
+    <script>
+      /* ====================== TOGGLE FUNCTIONS (SIDEBAR STYLE) ====================== */
 
-    <div class="legend" id="clusterLegendPanel" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h4 id="legendTitle">Kabupaten</h4>
-            <button onclick="toggleLegend(false)" style="border:none; background:none; font-size:20px; cursor:pointer; color:#333;">✖</button>
-        </div>
-        
-        <div id="legendContent">
-            </div>
-        </div>
-</div>
+      /**
+       * Mengubah tampilan panel Clustering Controls (Sidebar)
+       * @param {boolean} show - true untuk menampilkan panel, false untuk menyembunyikan.
+       */
+      function toggleControls(show) {
+        const panel = document.getElementById("clusteringControlsPanel");
+        const showBtn = document.getElementById("showControlsBtn");
 
-<script>
-/* ====================== TOGGLE FUNCTIONS (SIDEBAR STYLE) ====================== */
+        if (show) {
+          panel.style.display = "block";
+          showBtn.style.display = "none";
+        } else {
+          panel.style.display = "none";
+          showBtn.style.display = "block";
+        }
+      }
 
-/**
- * Mengubah tampilan panel Clustering Controls (Sidebar)
- * @param {boolean} show - true untuk menampilkan panel, false untuk menyembunyikan.
- */
-function toggleControls(show) {
-    const panel = document.getElementById('clusteringControlsPanel');
-    const showBtn = document.getElementById('showControlsBtn');
+      /**
+       * Mengubah tampilan panel Legend (Sidebar Bawah)
+       * @param {boolean} show - true untuk menampilkan panel, false untuk menyembunyikan.
+       */
+      function toggleLegend(show) {
+        const panel = document.getElementById("clusterLegendPanel");
+        const showBtn = document.getElementById("showLegendBtn");
 
-    if (show) {
-        panel.style.display = 'block';
-        showBtn.style.display = 'none';
-    } else {
-        panel.style.display = 'none';
-        showBtn.style.display = 'block';
-    }
-}
+        if (show) {
+          panel.style.display = "block";
+          showBtn.style.display = "none";
+        } else {
+          panel.style.display = "none";
+          // Hanya tampilkan tombol buka legend jika map sudah dimuat
+          if (geoJsonLayer) showBtn.style.display = "block";
+        }
+      }
 
-/**
- * Mengubah tampilan panel Legend (Sidebar Bawah)
- * @param {boolean} show - true untuk menampilkan panel, false untuk menyembunyikan.
- */
-function toggleLegend(show) {
-    const panel = document.getElementById('clusterLegendPanel');
-    const showBtn = document.getElementById('showLegendBtn');
+      /* ====================== CHART ====================== */
+      let chartInstance = null;
 
-    if (show) {
-        panel.style.display = 'block';
-        showBtn.style.display = 'none';
-    } else {
-        panel.style.display = 'none';
-        // Hanya tampilkan tombol buka legend jika map sudah dimuat
-        if (geoJsonLayer) showBtn.style.display = 'block';
-    }
-}
+      function tutupChart() {
+        document.getElementById("chartBox").style.display = "none";
+        if (chartInstance) chartInstance.destroy();
+      }
 
+      function tampilkanGrafik(kabupaten, data) {
+        document.getElementById("chartBox").style.display = "block";
+        document.getElementById(
+          "chartTitle"
+        ).innerText = `Forecasting Cuaca ${kabupaten}`;
 
-/* ====================== CHART ====================== */
-let chartInstance = null;
+        const labels = [...data.last_days.dates, ...data.forecast.dates];
+        const lastData = data.last_days.values.map((v) => v[0]);
+        const forecastData = data.forecast.values.map((v) => v[0]);
 
-function tutupChart() {
-    document.getElementById("chartBox").style.display = "none";
-    if (chartInstance) chartInstance.destroy();
-}
+        const ctx = document.getElementById("forecastChart");
 
-function tampilkanGrafik(kabupaten, data) {
-    document.getElementById("chartBox").style.display = "block";
-    document.getElementById("chartTitle").innerText =
-        `Forecasting Cuaca ${kabupaten}`;
+        if (chartInstance) chartInstance.destroy();
 
-    const labels = [...data.last_days.dates, ...data.forecast.dates];
-    const lastData = data.last_days.values.map(v => v[0]);
-    const forecastData = data.forecast.values.map(v => v[0]);
-
-    const ctx = document.getElementById("forecastChart");
-
-    if (chartInstance) chartInstance.destroy();
-
-    chartInstance = new Chart(ctx, {
-        type: "line",
-        data: {
+        chartInstance = new Chart(ctx, {
+          type: "line",
+          data: {
             labels: labels,
             datasets: [
-                {
-                    label: "3 Hari Terakhir",
-                    data: lastData,
-                    borderColor: '#42a5f5',
-                    backgroundColor: 'rgba(66, 165, 245, 0.5)',
-                },
-                {
-                    label: "Forecast 5 Hari",
-                    data: Array(lastData.length).fill(null).concat(forecastData),
-                    borderColor: '#ef5350',
-                    borderDash: [6,4],
-                    backgroundColor: 'transparent'
-                }
-            ]
-        },
-        options: {
+              {
+                label: "3 Hari Terakhir",
+                data: lastData,
+                borderColor: "#42a5f5",
+                backgroundColor: "rgba(66, 165, 245, 0.5)",
+              },
+              {
+                label: "Forecast 5 Hari",
+                data: Array(lastData.length).fill(null).concat(forecastData),
+                borderColor: "#ef5350",
+                borderDash: [6, 4],
+                backgroundColor: "transparent",
+              },
+            ],
+          },
+          options: {
             responsive: true,
             plugins: {
-                legend: { position: 'top' },
-                title: { display: true, text: 'Suhu Rata-rata (°C)' }
+              legend: { position: "top" },
+              title: { display: true, text: "Suhu Rata-rata (°C)" },
             },
             scales: {
-                y: { beginAtZero: false }
-            }
-        }
-    });
-}
+              y: { beginAtZero: false },
+            },
+          },
+        });
+      }
 
-/* ====================== MAP ====================== */
-const clusterColors = { 0:"#5e35b1", 1:"#00897b", 2:"#fdd835" };
-const defaultWarnaKab = {
-    Bangkalan:"#e41a1c", Sampang:"#377eb8",
-    Pamekasan:"#4daf4a", Sumenep:"#984ea3"
-};
-const kabupatenList = ["Bangkalan", "Sampang", "Pamekasan", "Sumenep"]; 
+      /* ====================== MAP ====================== */
+      const clusterColors = { 0: "#5e35b1", 1: "#00897b", 2: "#fdd835" };
+      const defaultWarnaKab = {
+        Bangkalan: "#e41a1c",
+        Sampang: "#377eb8",
+        Pamekasan: "#4daf4a",
+        Sumenep: "#984ea3",
+      };
+      const kabupatenList = ["Bangkalan", "Sampang", "Pamekasan", "Sumenep"];
 
-var map = L.map("map").setView([-7.0, 113.9], 10);
-var geoJsonLayer = null;
-var clusterResults = {}; 
+      var map = L.map("map").setView([-7.0, 113.9], 10);
+      var geoJsonLayer = null;
+      var clusterResults = {};
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
+        map
+      );
 
-function styleFeature(feature) {
-    const nama = feature.properties.nm_dati2;
-    const clusterId = clusterResults[nama];
+      function styleFeature(feature) {
+        const nama = feature.properties.nm_dati2;
+        const clusterId = clusterResults[nama];
 
-    if (clusterId !== undefined && clusterId !== null) {
-        return {
-            color:"#333",
+        if (clusterId !== undefined && clusterId !== null) {
+          return {
+            color: "#333",
             fillColor: clusterColors[clusterId] || "#ccc",
-            fillOpacity:0.8,
-            weight: 2
+            fillOpacity: 0.8,
+            weight: 2,
+          };
+        }
+
+        return {
+          color: "#444",
+          fillColor: defaultWarnaKab[nama] || "#ccc",
+          fillOpacity: 0.6,
+          weight: 1,
         };
-    }
+      }
 
-    return {
-        color:"#444",
-        fillColor: defaultWarnaKab[nama] || "#ccc",
-        fillOpacity:0.6,
-        weight: 1
-    };
-}
+      function updateLegend(mode) {
+        const legendContent = document.getElementById("legendContent");
+        const legendTitle = document.getElementById("legendTitle");
+        legendContent.innerHTML = "";
 
-function updateLegend(mode) {
-    const legendContent = document.getElementById("legendContent");
-    const legendTitle = document.getElementById("legendTitle");
-    legendContent.innerHTML = "";
-    
-    // Pastikan legend terbuka setelah clustering berhasil
-    toggleLegend(true);
+        // Pastikan legend terbuka setelah clustering berhasil
+        toggleLegend(true);
 
-    if (mode === "kabupaten") {
-        legendTitle.innerHTML = "Kabupaten";
-        Object.keys(defaultWarnaKab).forEach(kab => {
+        if (mode === "kabupaten") {
+          legendTitle.innerHTML = "Kabupaten";
+          Object.keys(defaultWarnaKab).forEach((kab) => {
             legendContent.innerHTML += `
                 <div class="item">
                     <span class="swatch" style="background:${defaultWarnaKab[kab]}"></span>
                     <div class="text-content">${kab}</div>
                 </div>`;
-        });
-    } else {
-        legendTitle.innerHTML = "Klaster Cuaca";
+          });
+        } else {
+          legendTitle.innerHTML = "Klaster Cuaca";
 
-        const clusterDescriptions = {
+          const clusterDescriptions = {
             0: {
-                stats: "Rata-rata Suhu 33.2°C, Curah Hujan 100.0 mm, Kelembaban 78.7%",
-                type: "Hari Hujan Lebat dan Panas"
+              stats:
+                "Rata-rata Suhu 33.2°C, Curah Hujan 100.0 mm, Kelembaban 78.7%",
+              type: "Hari Hujan Lebat dan Panas",
             },
             1: {
-                stats: "Rata-rata Suhu 32.7°C, Curah Hujan 0.0 mm, Kelembaban 73.5%",
-                type: "Hari Kering dan Panas"
+              stats:
+                "Rata-rata Suhu 32.7°C, Curah Hujan 0.0 mm, Kelembaban 73.5%",
+              type: "Hari Kering dan Panas",
             },
             2: {
-                stats: "Rata-rata Suhu 31.3°C, Curah Hujan 96.4 mm, Kelembaban 86.7%",
-                type: "Hari Hujan Lebat dan Dingin/Sejuk"
-            }
-        };
-        Object.keys(clusterColors).forEach(i => {
+              stats:
+                "Rata-rata Suhu 31.3°C, Curah Hujan 96.4 mm, Kelembaban 86.7%",
+              type: "Hari Hujan Lebat dan Dingin/Sejuk",
+            },
+          };
+          Object.keys(clusterColors).forEach((i) => {
             legendContent.innerHTML += `
                 <div class="item">
                     <span class="swatch" style="background:${clusterColors[i]}"></span>
@@ -390,149 +505,170 @@ function updateLegend(mode) {
                     </div>
                 </div>
             `;
-        });
-    }
-}
+          });
+        }
+      }
 
-function loadKabupatenLayer() {
-    if (geoJsonLayer) map.removeLayer(geoJsonLayer);
+      function loadKabupatenLayer() {
+        if (geoJsonLayer) map.removeLayer(geoJsonLayer);
 
-    clusterResults = {};
-    updateLegend("kabupaten");
-    
-    // Sembunyikan Kontrol dan Legend saat memuat peta
-    toggleControls(false); 
-    toggleLegend(false);
+        clusterResults = {};
+        updateLegend("kabupaten");
 
-    fetch("{{ url_for('static', filename='Madura.geojson') }}")
-        .then(res => res.json())
-        .then(data => {
+        // Sembunyikan Kontrol dan Legend saat memuat peta
+        toggleControls(false);
+        toggleLegend(false);
+
+        fetch("{{ url_for('static', filename='Madura.geojson') }}")
+          .then((res) => res.json())
+          .then((data) => {
             geoJsonLayer = L.geoJSON(data, {
-                style: styleFeature,
-                onEachFeature: (feature, layer) => {
-                    const nama = feature.properties.nm_dati2;
+              style: styleFeature,
+              onEachFeature: (feature, layer) => {
+                const nama = feature.properties.nm_dati2;
 
-                    layer.bindPopup(`<b>${nama}</b>`);
+                layer.bindPopup(`<b>${nama}</b>`);
 
-                    layer.on("click", () => {
-                        fetch(`/forecast/${nama}`)
-                            .then(res => res.json())
-                            .then(data => tampilkanGrafik(nama, data))
-                            .catch(err => alert(`Gagal mengambil data forecast untuk ${nama}: ${err.message}`));
-                    });
-                }
+                layer.on("click", () => {
+                  fetch(`/forecast/${nama}`)
+                    .then((res) => res.json())
+                    .then((data) => tampilkanGrafik(nama, data))
+                    .catch((err) =>
+                      alert(
+                        `Gagal mengambil data forecast untuk ${nama}: ${err.message}`
+                      )
+                    );
+                });
+              },
             }).addTo(map);
 
             map.fitBounds(geoJsonLayer.getBounds());
             toggleControls(true); // Tampilkan Kontrol Clustering secara default setelah loading
             toggleLegend(false); // Sembunyikan Legend Klaster setelah loading (akan muncul saat clustering)
-        })
-        .catch(err => {
+          })
+          .catch((err) => {
             console.error("Gagal memuat GeoJSON:", err);
             toggleControls(true); // Pastikan kontrol tetap bisa dibuka jika ada error
+          });
+      }
+
+      function displayClusterInterpretation(clusterCenters, nFeatures) {
+        const table = document.getElementById("interpretasiKlaster");
+        table.innerHTML = "";
+        table.style.display = "table";
+
+        const featureNames = [
+          "Suhu (°C)",
+          "Curah Hujan (mm)",
+          "Kelembaban (%)",
+        ].slice(0, nFeatures);
+        let headerHtml = "<tr><th>Klaster</th>";
+        featureNames.forEach((name) => {
+          headerHtml += `<th>${name}</th>`;
         });
-}
+        headerHtml += "</tr>";
+        table.innerHTML += headerHtml;
 
-function displayClusterInterpretation(clusterCenters, nFeatures) {
-    const table = document.getElementById("interpretasiKlaster");
-    table.innerHTML = "";
-    table.style.display = 'table';
-
-    const featureNames = ["Suhu (°C)", "Curah Hujan (mm)", "Kelembaban (%)"].slice(0, nFeatures);
-    let headerHtml = '<tr><th>Klaster</th>';
-    featureNames.forEach(name => {
-        headerHtml += `<th>${name}</th>`;
-    });
-    headerHtml += '</tr>';
-    table.innerHTML += headerHtml;
-
-    clusterCenters.forEach((center, index) => {
-        let rowHtml = `<tr><td><b style="color:${clusterColors[index] || '#333'};">Klaster ${index}</b></td>`;
-        center.forEach((value, i) => {
+        clusterCenters.forEach((center, index) => {
+          let rowHtml = `<tr><td><b style="color:${
+            clusterColors[index] || "#333"
+          };">Klaster ${index}</b></td>`;
+          center.forEach((value, i) => {
             let formattedValue;
             if (i === 0) formattedValue = `${value.toFixed(1)}°C`;
             else if (i === 1) formattedValue = `${value.toFixed(1)} mm`;
             else formattedValue = `${value.toFixed(1)}%`;
 
             rowHtml += `<td>${formattedValue}</td>`;
+          });
+          rowHtml += "</tr>";
+          table.innerHTML += rowHtml;
         });
-        rowHtml += '</tr>';
-        table.innerHTML += rowHtml;
-    });
-}
+      }
 
-/* ====================== CLUSTERING ====================== */
-async function runClustering() {
-    const tgl = document.getElementById("tglInput").value || "1";
-    const bln = document.getElementById("blnInput").value || "1";
-    const tahun = document.getElementById("tahunInput").value || "2024";
-    const notificationBox = document.getElementById("notificationBox");
+      /* ====================== CLUSTERING ====================== */
+      async function runClustering() {
+        const tgl = document.getElementById("tglInput").value || "1";
+        const bln = document.getElementById("blnInput").value || "1";
+        const tahun = document.getElementById("tahunInput").value || "2024";
+        const notificationBox = document.getElementById("notificationBox");
 
-    notificationBox.innerHTML = `<span style="color:blue;">⏳ Memulai prediksi klaster untuk 4 kabupaten...</span>`;
+        notificationBox.innerHTML = `<span style="color:blue;">⏳ Memulai prediksi klaster untuk 4 kabupaten...</span>`;
 
-    clusterResults = {};
-    let allSuccess = true;
-    let clusterCentersData = null;
+        clusterResults = {};
+        let allSuccess = true;
+        let clusterCentersData = null;
 
-    for (const kab of kabupatenList) {
-        const url = `/clustering/${encodeURIComponent(kab)}?tgl=${encodeURIComponent(tgl)}&bln=${encodeURIComponent(bln)}&tahun=${encodeURIComponent(tahun)}`;
-        
-        try {
+        for (const kab of kabupatenList) {
+          const url = `/clustering/${encodeURIComponent(
+            kab
+          )}?tgl=${encodeURIComponent(tgl)}&bln=${encodeURIComponent(
+            bln
+          )}&tahun=${encodeURIComponent(tahun)}`;
+
+          try {
             const res = await fetch(url);
             const text = await res.text();
-            
+
             try {
-                const data = JSON.parse(text);
-                if (!res.ok) {
-                    const msg = data.message || data.error || text;
-                    console.error(`Clustering ${kab} gagal:`, msg);
-                    notificationBox.innerHTML += `<br><span style="color:red;">❌ Gagal ${kab}: ${msg}</span>`;
-                    allSuccess = false;
-                    continue;
-                }
-
-                const predictedCluster = (data.predicted_cluster ?? data.predicted ?? data.cluster ?? data.predictedCluster);
-                if (predictedCluster === undefined || predictedCluster === null) {
-                    console.error(`Respon ${kab} tidak valid: tidak ada field klaster.`, data);
-                    notificationBox.innerHTML += `<br><span style="color:red;">❌ Respon ${kab} tidak valid (tanpa klaster).</span>`;
-                    allSuccess = false;
-                    continue;
-                }
-
-                const clusterId = Number(predictedCluster);
-                clusterResults[kab] = clusterId;
-
-                if (Array.isArray(data.cluster_centers) && !clusterCentersData) {
-                    clusterCentersData = data.cluster_centers;
-                }
-
-            } catch (err) {
-                console.error(`Gagal parsing respon JSON dari ${kab}:`, text, err);
-                notificationBox.innerHTML += `<br><span style="color:red;">❌ Gagal parsing respon ${kab}.</span>`;
+              const data = JSON.parse(text);
+              if (!res.ok) {
+                const msg = data.message || data.error || text;
+                console.error(`Clustering ${kab} gagal:`, msg);
+                notificationBox.innerHTML += `<br><span style="color:red;">❌ Gagal ${kab}: ${msg}</span>`;
                 allSuccess = false;
-            }
+                continue;
+              }
 
-        } catch (err) {
+              const predictedCluster =
+                data.predicted_cluster ??
+                data.predicted ??
+                data.cluster ??
+                data.predictedCluster;
+              if (predictedCluster === undefined || predictedCluster === null) {
+                console.error(
+                  `Respon ${kab} tidak valid: tidak ada field klaster.`,
+                  data
+                );
+                notificationBox.innerHTML += `<br><span style="color:red;">❌ Respon ${kab} tidak valid (tanpa klaster).</span>`;
+                allSuccess = false;
+                continue;
+              }
+
+              const clusterId = Number(predictedCluster);
+              clusterResults[kab] = clusterId;
+
+              if (Array.isArray(data.cluster_centers) && !clusterCentersData) {
+                clusterCentersData = data.cluster_centers;
+              }
+            } catch (err) {
+              console.error(
+                `Gagal parsing respon JSON dari ${kab}:`,
+                text,
+                err
+              );
+              notificationBox.innerHTML += `<br><span style="color:red;">❌ Gagal parsing respon ${kab}.</span>`;
+              allSuccess = false;
+            }
+          } catch (err) {
             notificationBox.innerHTML += `<br><span style="color:red;">❌ Gagal fetch API ${kab}: ${err.message}. Pastikan server Flask berjalan.</span>`;
             console.error(`Clustering fetch error ${kab}:`, err);
             allSuccess = false;
+          }
         }
-    }
 
-    if (geoJsonLayer) {
-        geoJsonLayer.setStyle(styleFeature);
-    } else {
-        loadKabupatenLayer();
-    }
-    
-    // Panggil updateLegend untuk menampilkan hasil klaster (ini juga memanggil toggleLegend(true))
-    updateLegend('cluster');
-}
+        if (geoJsonLayer) {
+          geoJsonLayer.setStyle(styleFeature);
+        } else {
+          loadKabupatenLayer();
+        }
 
+        // Panggil updateLegend untuk menampilkan hasil klaster (ini juga memanggil toggleLegend(true))
+        updateLegend("cluster");
+      }
 
-// Muat peta saat halaman pertama dimuat
-loadKabupatenLayer();
-</script>
-
-</body>
+      // Muat peta saat halaman pertama dimuat
+      loadKabupatenLayer();
+    </script>
+  </body>
 </html>
