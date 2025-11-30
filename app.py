@@ -65,18 +65,18 @@ def load_all_assets():
     try:
         CROP_MODEL = joblib.load(CROP_PRED_MODEL_PATH)
         CROP_SCALER = joblib.load(CROP_PRED_SCALER_PATH)
-        print(f"✅ Model CROP ({CROP_PRED_MODEL_PATH}) dan Scaler berhasil dimuat.")
+        print(f"Model CROP ({CROP_PRED_MODEL_PATH}) dan Scaler berhasil dimuat.")
     except Exception as e:
-        print(f"❌ GAGAL memuat model CROP: {e}")
+        print(f"GAGAL memuat model CROP: {e}")
         
     # B. Muat Model Clustering (Anda)
     for kab, filename in MODEL_FILES_CLUSTERING.items():
         try:
             model_loaded = joblib.load(filename)
             LOADED_MODELS_CLUSTERING[kab] = model_loaded
-            print(f"✅ Model CLUSTERING {kab.title()} ({filename}) berhasil dimuat.")
+            print(f"Model CLUSTERING {kab.title()} ({filename}) berhasil dimuat.")
         except Exception as e:
-            print(f"❌ GAGAL memuat model CLUSTERING {kab.title()} ({filename}): {e}")
+            print(f"GAGAL memuat model CLUSTERING {kab.title()} ({filename}): {e}")
             LOADED_MODELS_CLUSTERING[kab] = None 
 
     # C. Muat Scaler Clustering (Anda)
@@ -84,17 +84,17 @@ def load_all_assets():
         try:
             scaler_loaded = joblib.load(filename)
             LOADED_SCALERS[kab] = scaler_loaded
-            print(f"✅ Scaler CLUSTERING {kab.title()} ({filename}) berhasil dimuat.")
+            print(f"Scaler CLUSTERING {kab.title()} ({filename}) berhasil dimuat.")
         except Exception as e:
-            print(f"❌ GAGAL memuat scaler CLUSTERING {kab.title()} ({filename}): {e}")
+            print(f"GAGAL memuat scaler CLUSTERING {kab.title()} ({filename}): {e}")
             LOADED_SCALERS[kab] = None 
 
     # D. Muat Model VAR/Forecasting (KRITIS: Perbaikan Kode Teman Anda)
     try:
         VAR_MODEL = joblib.load(VAR_MODEL_PATH)
-        print(f"✅ Model VAR ({VAR_MODEL_PATH}) berhasil dimuat.")
+        print(f"Model VAR ({VAR_MODEL_PATH}) berhasil dimuat.")
     except Exception as e:
-        print(f"❌ GAGAL memuat model VAR: {e}. PASTIKAN PATH BENAR.")
+        print(f"GAGAL memuat model VAR: {e}. PASTIKAN PATH BENAR.")
         VAR_MODEL = None
             
     print("--- SELESAI MEMUAT SEMUA ASET ---")
@@ -141,11 +141,39 @@ def predict():
         features_scaled = pd.DataFrame(features_scaled, columns=input_df.columns)
 
         prediction = CROP_MODEL.predict(features_scaled)
-        output = prediction[0]
+
+        translate = {
+            'rice': 'padi',
+            'maize': 'jagung',
+            'jute': 'rami',
+            'cotton': 'kapas',
+            'coconut': 'kelapa',
+            'papaya': 'pepaya',
+            'orange': 'jeruk',
+            'apple': 'apel',
+            'muskmelon': 'blewah',
+            'watermelon': 'semangka',
+            'grapes': 'anggur',
+            'mango': 'mangga',
+            'banana': 'pisang',
+            'pomegranate': 'delima',
+            'lentil': 'lentil',
+            'blackgram': 'kacang tunggak',
+            'mungbean': 'kacang hijau',
+            'mothbeans': 'kacang ngengat',
+            'pigeonpeas': 'kacang gude',
+            'kidneybeans': 'kacang merah',
+            'chickpea': 'kacang arab',
+            'coffee': 'kopi'
+        }
+
+
+        output = translate[prediction[0]]
+
             
         # Asumsi Anda memiliki template Crop.html
         return render_template('Crop.html', 
-                                prediction_text=f'Hasil Prediksi (Kelas Tanaman): {output}', 
+                                prediction_text=f'{output}', 
                                 feature_names=FEATURE_NAMES_CROP,
                                 form_values=form_values) 
         
@@ -258,6 +286,10 @@ def forecast(kabupaten):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
 # ==============================================================================
 # --- 5. ROUTE CLUSTERING PER KABUPATEN (Kode Anda) ---
 # ==============================================================================

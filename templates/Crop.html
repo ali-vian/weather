@@ -3,135 +3,18 @@
   <head>
     <title>Random Forest Predictor - Pertanian</title>
     <style>
-      /* --- Tata Letak Utama (Flexbox) --- */
+      /* --- Tata Letak Utama (Grid/Pusat) --- */
       body {
         font-family: Arial, sans-serif;
         margin: 0;
         padding: 0;
         min-height: 100vh;
         background-color: #f4f4f4;
-        transition: margin-left 0.5s; /* Animasi pergeseran konten utama */
+        display: flex; /* Menggunakan flexbox untuk konten utama */
+        flex-direction: column;
       }
 
-      /* --- Sidebar (Kiri) --- */
-      .sidebar {
-        height: 100%; /* Full height */
-        width: 350px;
-        position: fixed; /* Sidebar tetap di tempatnya */
-        z-index: 1; /* Di atas konten lain */
-        top: 0;
-        left: 0;
-        background-color: #ffffff;
-        padding: 20px;
-        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-        transition: 0.5s; /* Animasi buka/tutup */
-        overflow-x: hidden;
-      }
-
-      /* Menyembunyikan sidebar secara default */
-      .sidebar.closed {
-        width: 0;
-        padding: 0;
-      }
-
-      /* --- Konten Utama (Kanan) --- */
-      .main-content {
-        flex-grow: 1;
-        margin-left: 350px; /* Jarak default = lebar sidebar */
-        padding: 20px;
-        background-color: #e9ffdf;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: #38761d;
-        font-size: 1.5em;
-        text-align: center;
-        transition: margin-left 0.5s;
-      }
-
-      /* Pergeseran konten utama saat sidebar ditutup */
-      body.sidebar-closed .main-content {
-        margin-left: 0;
-      }
-
-      /* --- Tombol Buka/Tutup --- */
-      .openbtn {
-        font-size: 20px;
-        cursor: pointer;
-        background-color: #38761d;
-        color: white;
-        padding: 10px 15px;
-        border: none;
-        position: fixed; /* Tombol tetap di tempatnya */
-        top: 15px;
-        left: 15px;
-        z-index: 2; /* Di atas sidebar */
-        border-radius: 0 4px 4px 0;
-        transition: left 0.5s;
-      }
-
-      /* Geser tombol ke kanan saat sidebar terbuka */
-      .sidebar:not(.closed) ~ .openbtn {
-        left: 365px; /* Lebar sidebar + sedikit padding */
-      }
-
-      /* --- Styling Elemen Form dan Hasil (Dipertahankan) --- */
-      h1 {
-        color: #38761d;
-        border-bottom: 2px solid #e0e0e0;
-        padding-bottom: 10px;
-        margin-top: 0;
-        font-size: 1.5em;
-      }
-      h2.prediction {
-        color: #1c4587;
-        margin-top: 20px;
-        padding: 10px;
-        background-color: #e8f0ff;
-        border-radius: 5px;
-        font-size: 1.2em;
-      }
-      .error {
-        color: red;
-        font-weight: bold;
-        padding: 10px;
-        background-color: #ffe8e8;
-        border: 1px solid red;
-        border-radius: 5px;
-      }
-      form div {
-        margin-bottom: 15px;
-      }
-      label {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 5px;
-        font-size: 0.9em;
-      }
-      input[type="text"] {
-        width: 100%;
-        padding: 8px;
-        box-sizing: border-box;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
-      input[type="submit"] {
-        background-color: #38761d;
-        color: white;
-        padding: 10px 15px;
-        border: none;
-        cursor: pointer;
-        width: 100%;
-        margin-top: 10px;
-        border-radius: 4px;
-      }
-      hr {
-        border: 0;
-        height: 1px;
-        background: #e0e0e0;
-        margin: 20px 0;
-      }
-
+      /* --- Navbar (Dipertahankan) --- */
       .navbar {
         display: flex;
         justify-content: space-between;
@@ -165,6 +48,93 @@
       .navbar .menu li a:hover {
         text-decoration: underline;
       }
+
+      /* --- Konten Utama (Pusat) --- */
+      .main-content-wrapper {
+        flex-grow: 1;
+        padding: 40px 20px;
+        background-color: #cdecfe;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      /* Container untuk Form dan Hasil */
+      .form-container {
+        width: 100%;
+        max-width: 500px;
+        padding: 30px;
+        background-color: #ffffff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+      }
+
+      /* --- TATA LETAK 2 KOLOM BARU (DI DALAM FORM) --- */
+
+      /* Wrapper untuk 2 kolom. Secara default, tetap satu kolom (Flex-direction: column) */
+      .form-fields-grid {
+        display: flex;
+        flex-wrap: wrap; /* Memungkinkan item untuk pindah ke baris baru */
+        gap: 20px; /* Jarak antara kolom dan baris */
+      }
+
+      .form-fields-grid > div {
+        width: 100%; /* Default: Ambil seluruh lebar (1 kolom) */
+        margin-bottom: 0; /* Hapus margin-bottom dari div lama karena kita gunakan gap */
+      }
+
+      /* Media Query untuk Layar Lebar (Tablet ke atas, misalnya > 768px) */
+      @media (min-width: 768px) {
+        /* Set max-width form-container lebih besar untuk menampung 2 kolom */
+        .form-container {
+          max-width: 800px;
+        }
+
+        /* Atur lebar setiap input menjadi hampir 50% untuk 2 kolom */
+        .form-fields-grid > div {
+          /* calc(50% - (gap / 2)) untuk memastikan 2 kolom muat dengan gap di tengah */
+          width: calc(50% - 10px);
+        }
+      }
+      form div {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-size: 1em;
+        color: #555;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 10px; /* Padding diperbesar */
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1em;
+      }
+      input[type="submit"] {
+        background-color: #1a73e8;
+        color: white;
+        padding: 12px 15px; /* Padding diperbesar */
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 20px; /* Margin diperbesar */
+        border-radius: 4px;
+        font-size: 1.1em;
+        transition: background-color 0.3s;
+      }
+      input[type="submit"]:hover {
+        background-color: #0b4694;
+      }
+      hr {
+        border: 0;
+        height: 1px;
+        background: #e0e0e0;
+        margin: 25px 0;
+      }
     </style>
   </head>
   <body>
@@ -174,70 +144,88 @@
         <ul class="menu">
           <li><a href="/">Beranda</a></li>
           <li><a href="/crop">Rekomendasi Tanaman</a></li>
-          <li><a href="#">Tentang</a></li>
+          <li><a href="/about">Tentang</a></li>
         </ul>
       </nav>
     </header>
-    <button class="openbtn" id="toggleButton">☰ Buka Input</button>
+    <div class="main-content-wrapper">
+      <div class="form-container">
+        <h1>Rekomendasi Jenis Tanaman</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 25px">
+          Masukkan parameter di bawah ini untuk mendapatkan rekomendasi jenis
+          tanaman.
+        </p>
 
-    <div class="sidebar" id="mySidebar">
-      <h1>🌱 Prediksi Jenis Tanaman</h1>
+        {% if error_message %}
+        <p class="error">{{ error_message }}</p>
+        {% endif %}
 
-      {% if error_message %}
-      <p class="error">❌ {{ error_message }}</p>
-      {% endif %}
+        <form action="{{ url_for('predict') }}" method="post">
+          <div class="form-fields-grid">
+            {% for name in feature_names %}
+            <div>
+              <label for="{{ name }}"
+                >{{ name.upper() if name | length < 3 else name.capitalize()
+                }}:</label
+              >
+              <input
+                type="text"
+                id="{{ name }}"
+                name="{{ name }}"
+                required
+                value="{{ form_values.get(name, '') }}"
+              />
+            </div>
+            {% endfor %}
+          </div>
+          <input type="submit" value="Dapatkan Prediksi" />
+        </form>
 
-      <form action="{{ url_for('predict') }}" method="post">
-        {% for name in feature_names %}
-        <div>
-          <label for="{{ name }}"
-            >{{ name.upper() if name | length < 3 else name.capitalize()
-            }}:</label
-          >
-          <input
-            type="text"
-            id="{{ name }}"
-            name="{{ name }}"
-            required
-            value="{{ form_values.get(name, '') }}"
-          />
-        </div>
-        {% endfor %}
+        <hr />
 
-        <input type="submit" value="Dapatkan Prediksi" />
-      </form>
-
-      <hr />
-
-      {% if prediction_text %}
-      <h2 class="prediction">✅ {{ prediction_text }}</h2>
-      <p style="font-size: 0.8em; color: #555">
-        *Silakan ganti kode angka hasil prediksi dengan nama kelas tanaman yang
-        sesuai.
-      </p>
-      {% endif %}
+        {% if prediction_text %}
+        <h2 class="prediction">Hasil Prediksi: {{ prediction_text }}</h2>
+        {% endif %}
+      </div>
     </div>
-    <script>
-      document.getElementById("toggleButton").onclick = function () {
-        var sidebar = document.getElementById("mySidebar");
-        var body = document.body;
-        var button = document.getElementById("toggleButton");
+    <!-- <div class="main-content-wrapper">
+      <div class="form-container">
+        <h1>Rekomendasi Jenis Tanaman</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 25px">
+          Masukkan parameter di bawah ini untuk mendapatkan rekomendasi jenis
+          tanaman.
+        </p>
 
-        // Toggle class 'closed' pada sidebar
-        sidebar.classList.toggle("closed");
+        {% if error_message %}
+        <p class="error">{{ error_message }}</p>
+        {% endif %}
 
-        // Toggle class 'sidebar-closed' pada body untuk menggeser main-content
-        body.classList.toggle("sidebar-closed");
+        <form action="{{ url_for('predict') }}" method="post">
+          {% for name in feature_names %}
+          <div>
+            <label for="{{ name }}"
+              >{{ name.upper() if name | length < 3 else name.capitalize()
+              }}:</label
+            >
+            <input
+              type="text"
+              id="{{ name }}"
+              name="{{ name }}"
+              required
+              value="{{ form_values.get(name, '') }}"
+            />
+          </div>
+          {% endfor %}
 
-        // Mengubah teks tombol
-        if (sidebar.classList.contains("closed")) {
-          button.innerHTML = "☰ Buka Input";
-        } else {
-          button.innerHTML = "✖ Tutup Input";
-        }
-      };
+          <input type="submit" value="Dapatkan Prediksi" />
+        </form>
 
-      // Secara default, sidebar tetap terbuka saat dimuat (untuk kepraktisan)
-    </script>
+        <hr />
+
+        {% if prediction_text %}
+        <h2 class="prediction">Hasil Prediksi: {{ prediction_text }}</h2>
+        {% endif %}
+      </div>
+    </div> -->
   </body>
 </html>
