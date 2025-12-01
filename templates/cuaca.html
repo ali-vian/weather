@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediksi Cuaca</title>
+    <!-- Memuat Tailwind CSS dari CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Menggunakan font Inter secara default */
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            /* Memastikan bg.png dimuat melalui url_for */
+            background-image: url('{{ url_for("static", filename="bg.png") }}'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        /* Style untuk Overlay Transparan agar teks lebih mudah dibaca */
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay untuk Konten -->
+    <div class="overlay flex items-center justify-center p-4 sm:p-8">
+        
+        <div class="w-full max-w-xl bg-white/90 backdrop-blur-sm rounded-xl shadow-2xl p-6 sm:p-10 transition-all duration-300">
+            
+            <!-- Header dan Judul -->
+            <header class="text-center mb-8">
+                <div class="text-4xl text-blue-700 mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 inline-block align-middle">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15A.75.75 0 0 0 3 15.75h18a.75.75 0 0 0 .75-.75V9a.75.75 0 0 0-.75-.75H3a.75.75 0 0 0-.75.75v6ZM3 9v-3h18v3M15 19.5h1.5M10.5 19.5h1.5M7.5 19.5h1.5" />
+                    </svg>
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800">Klasifikasi Gambar Cuaca</h1>
+                <p class="text-gray-600 mt-2">Upload citra cuaca untuk mendapatkan prediksi dari model Anda.</p>
+            </header>
+
+            <!-- Form Upload (Disesuaikan dengan action="/cuaca") -->
+            <form action="/cuaca" method="POST" enctype="multipart/form-data" class="space-y-6">
+                
+                <div class="relative border-2 border-dashed border-blue-400 rounded-lg p-6 hover:border-blue-600 transition duration-200 cursor-pointer">
+                    <!-- Label untuk tampilan file input -->
+                    <label for="file_input" class="block text-center text-gray-500 hover:text-blue-600 transition duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                        </svg>
+                        <span class="font-medium">Klik untuk memilih file atau seret & lepas di sini</span>
+                        <p class="text-sm text-gray-400">PNG, JPG, JPEG</p>
+                    </label>
+                    
+                    <!-- Input file tersembunyi (Disesuaikan dengan name="image") -->
+                    <input type="file" name="image" id="file_input" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold shadow-md hover:bg-blue-700 transition duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-blue-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 inline-block mr-2 align-text-bottom">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    Prediksi
+                </button>
+            </form>
+
+            <!-- Bagian Hasil Prediksi (Disesuaikan dengan variabel 'hasil' dan 'img') -->
+            {% if hasil %}
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Hasil Klasifikasi</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
+                    
+                    <!-- Tampilan Gambar -->
+                    <div class="flex flex-col items-center">
+                        <p class="text-sm font-medium text-gray-600 mb-2">Gambar yang Diupload:</p>
+                        <div class="relative w-full aspect-square overflow-hidden rounded-lg shadow-xl">
+                            <img src="{{ img }}" alt="Gambar yang Diupload" class="w-full h-full object-cover transition-all duration-300 transform hover:scale-105">
+                            <div class="absolute inset-0 bg-black/10"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Detail Prediksi -->
+                    <div class="flex flex-col justify-center h-full">
+                        <div class="bg-blue-100 p-6 rounded-lg shadow-md">
+                            <p class="text-sm font-medium text-blue-600 mb-1">HASIL PREDIKSI:</p>
+                            <!-- Menampilkan variabel 'hasil' dari Flask -->
+                            <p class="text-3xl font-extrabold text-blue-800 break-words">{{ hasil }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Blok Flash Messages (Dikomnetari karena tidak ada di kode asli, untuk menghindari error jika belum diimplementasikan di app.py) -->
+            {# 
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mt-6 space-y-3">
+                        {% for category, message in messages %}
+                            <div class="p-3 rounded-lg text-sm {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            #}
+        </div>
+    </div>
+    
+    <script>
+        // Logika sederhana untuk menampilkan nama file yang dipilih
+        document.getElementById('file_input').addEventListener('change', function() {
+            const fileName = this.files[0] ? this.files[0].name : 'Klik untuk memilih file...';
+            const label = document.querySelector('label[for="file_input"]');
+            if (label) {
+                 // Update elemen span
+                 label.querySelector('span').textContent = fileName;
+                 // Update elemen p
+                 const pElement = label.querySelector('p');
+                 if (pElement) {
+                    pElement.textContent = 'File terpilih, siap diupload.';
+                 }
+            }
+        });
+    </script>
+</body>
+</html>

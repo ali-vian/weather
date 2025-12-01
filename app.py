@@ -4,6 +4,10 @@ from flask import Flask, request, jsonify, render_template
 from datetime import timedelta
 import os 
 
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
+import numpy as np
+
 # ==============================================================================
 # --- 1. KONFIGURASI JALUR & VARIABEL GLOBAL ---
 # ==============================================================================
@@ -44,12 +48,20 @@ CSV_MAP = {
 # --- E. Variabel Global untuk Model yang Dimuat (Termasuk Model Teman Anda) ---
 LOADED_MODELS_CLUSTERING = {}
 LOADED_SCALERS = {} 
-VAR_MODEL = None # Variabel global baru untuk model VAR
-CROP_MODEL = None # Model Random Forest
+VAR_MODEL = None # Variabel global model VAR
+CROP_MODEL = None # Model Random Forest untuk crop prediction
 CROP_SCALER = None # Scaler Crop Prediction
 
 SUPPORTED_KABUPATEN_CLUSTERING = list(MODEL_FILES_CLUSTERING.keys())
 FEATURE_NAMES_CROP = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
+
+# Model CUACA (Image Classification)
+WEATHER_MODEL = None
+WEATHER_CLASSES = [
+    "dew", "fogsmog", "frost", "glaze", "hail",
+    "lightning", "rain", "rainbow", "rime",
+    "sandstorm", "snow"
+]
 
 # ==============================================================================
 # --- 2. FUNGSI LOADING SEMUA ASET (Berjalan saat Startup) ---
@@ -88,13 +100,24 @@ def load_all_assets():
             print(f"GAGAL memuat scaler CLUSTERING {kab.title()} ({filename}): {e}")
             LOADED_SCALERS[kab] = None 
 
-    # D. Muat Model VAR/Forecasting (KRITIS: Perbaikan Kode Teman Anda)
+    # D. Muat Model VAR/Forecasting
     try:
         VAR_MODEL = joblib.load(VAR_MODEL_PATH)
         print(f"Model VAR ({VAR_MODEL_PATH}) berhasil dimuat.")
     except Exception as e:
         print(f"GAGAL memuat model VAR: {e}. PASTIKAN PATH BENAR.")
         VAR_MODEL = None
+
+    # E. Muat Model Cuaca (Image Classification)
+    global WEATHER_MODEL
+    try:
+        WEATHER_MODEL = load_model("model_cuaca.h5")
+        print("Model CUACA berhasil dimuat.")
+    except Exception as e:
+        WEATHER_MODEL = None
+        print(f"GAGAL memuat model CUACA: {e}")
+
+
             
     print("--- SELESAI MEMUAT SEMUA ASET ---")
 
@@ -369,6 +392,31 @@ def get_clustering_data(kabupaten):
     except Exception as e:
         return jsonify({"error": f"Gagal memprediksi cluster: Terjadi error tak terduga: {str(e)}"}), 500
 
+@app.route("/cuaca", methods=["GET", "POST"])
+def prediksi_cuaca():
+    if WEATHER_MODEL is None:
+        return "Error: Model CUACA tidak dimuat. Pastikan file model_cuaca.h5 tersedia di folder proyek.", 500
+
+    if request.method == "POST":
+        file = request.files.get("image")
+        if not file:
+            return render_template("cuaca.html", hasil=None, error="Tidak ada file yang diunggah.")
+
+        save_path = os.path.join("static", file.filename)
+        file.save(save_path)
+
+        #  Preprocessing sesuai input model : (100x100)
+        img = load_img(save_path, target_size=(100, 100))
+        img = img_to_array(img) / 255.0
+        img = np.expand_dims(img, axis=0)
+
+        pred = WEATHER_MODEL.predict(img)
+        label_index = np.argmax(pred)
+        hasil = WEATHER_CLASSES[label_index]
+
+        return render_template("cuaca.html", hasil=hasil, img=save_path)
+
+    return render_template("cuaca.html", hasil=None)
 
 # ==============================================================================
 # --- BLOK RUNNING APLIKASI ---
